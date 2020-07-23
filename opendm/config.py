@@ -74,6 +74,15 @@ def config(argv=None):
                              'matcher-neighbors and this to 0 to skip '
                              'pre-matching. Default: %(default)s')
 
+    # parser.add_argument('--depthmap-resolution',
+    #                     metavar='<positive float>',
+    #                     action=StoreValue,
+    #                     type=float,
+    #                     default=640,
+    #                     help=('Controls the density of the point cloud by setting the resolution of the depthmap images. Higher values take longer to compute '
+    #                           'but produce denser point clouds. '
+    #                           'Default: %(default)s'))
+
     parser.add_argument('--end-with', '-e',
                         metavar='<string>',
                         action=StoreValue,

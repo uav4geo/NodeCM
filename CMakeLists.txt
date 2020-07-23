@@ -170,4 +170,13 @@ ExternalProject_Add(opencv
     -DCMAKE_BUILD_TYPE:STRING=Release
 )
 
+ExternalProject_Add(mve
+    GIT_REPOSITORY  https://github.com/OpenDroneMap/mve
+    GIT_TAG         099
+    UPDATE_COMMAND  ""
+    CONFIGURE_COMMAND ""
+    BUILD_IN_SOURCE 1
+    BUILD_COMMAND   make
+    INSTALL_COMMAND cp <SOURCE_DIR>/apps/makescene/makescene /usr/local/bin && cp <SOURCE_DIR>/apps/dmrecon/dmrecon /usr/local/bin/dmrecon 
+)
 
