@@ -42,3 +42,13 @@ class DatasetStage(Stage):
             with open(outputs["image_list_file"], "w") as f:
                 for image in image_files:
                     f.write(image + "\n")
+        else:
+            log.ODM_INFO("Reading existing image list from %s" % outputs["image_list_file"])
+            with open(outputs["image_list_file"], "r") as f:
+                image_files = list(filter(len, map(str.strip, f.read().split("\n"))))
+        
+        if len(image_files) == 0:
+            log.ODM_ERROR("No images found (JPG or TIFF). Check that you placed some images in the images/ directory.")
+            exit(1)
+
+        outputs["image_files"] = image_files
