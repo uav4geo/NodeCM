@@ -9,7 +9,7 @@ with open(os.path.join(os.path.dirname(__file__), '..', 'VERSION')) as version_f
     __version__ = version_file.read().strip()
 
 # parse arguments
-processopts = ['dataset', 'sparse', 'dense', 'mesh', 'texture', 'ortho']
+processopts = ['dataset', 'features', 'matching', 'sparse', 'dense', 'mesh', 'texture', 'ortho']
 
 class RerunFrom(argparse.Action):
     def __call__(self, parser, namespace, values, option_string=None):
@@ -42,14 +42,37 @@ def config(argv=None):
                         nargs='?',
                         help='Path to the project folder')
 
-    # parser.add_argument('--resize-to',
-    #                     metavar='<integer>',
-    #                     action=StoreValue,
-    #                     default=2048,
-    #                     type=int,
-    #                     help='Resizes images by the largest side for feature extraction purposes only. '
-    #                          'Set to -1 to disable. This does not affect the final orthophoto '
-    #                          ' resolution quality and will not resize the original images. Default:  %(default)s')
+    parser.add_argument('--resize-to',
+                        metavar='<integer>',
+                        action=StoreValue,
+                        default=2048,
+                        type=int,
+                        help='Resizes images by the largest side for feature extraction purposes only. '
+                             'Set to -1 to disable. This does not affect the final orthophoto '
+                             ' resolution quality and will not resize the original images. Default:  %(default)s')
+
+    parser.add_argument('--matcher-neighbors',
+                        metavar='<integer>',
+                        action=StoreValue,
+                        default=8,
+                        type=int,
+                        help='Number of nearest images to pre-match based on GPS '
+                             'exif data. Set to 0 to skip pre-matching. '
+                             'Neighbors works together with Distance parameter, '
+                             'set both to 0 to not use pre-matching. OpenSFM '
+                             'uses both parameters at the same time, Bundler '
+                             'uses only one which has value, prefering the '
+                             'Neighbors parameter. Default: %(default)s')
+
+    parser.add_argument('--matcher-distance',
+                        metavar='<integer>',
+                        action=StoreValue,
+                        default=0,
+                        type=int,
+                        help='Distance threshold in meters to find pre-matching '
+                             'images based on GPS exif data. Set both '
+                             'matcher-neighbors and this to 0 to skip '
+                             'pre-matching. Default: %(default)s')
 
     parser.add_argument('--end-with', '-e',
                         metavar='<string>',
@@ -97,6 +120,14 @@ def config(argv=None):
     #                       'Use 0 to disable cropping. '
     #                       'Default: %(default)s'))
 
+    
+    parser.add_argument('--camera-model',
+                        metavar='<string>',
+                        action=StoreValue,
+                        default='simple_radial',
+                        choices=['simple_radial', 'radial', 'simple_pinhole', 'pinhole', 'opencv', 'full_opencv', 'simple_radial_fisheye', 'radial_fisheye', 'opencv_fisheye', 'fov', 'thin_prism_fisheye'],
+                        help=('Camera model: [simple_radial, radial, simple_pinhole, pinhole, opencv, full_opencv, simple_radial_fisheye, radial_fisheye, opencv_fisheye, fov, thin_prism_fisheye]. default: '
+                              '%(default)s'))
 
     parser.add_argument('--texturing-data-term',
                         metavar='<string>',
@@ -237,11 +268,22 @@ def config(argv=None):
                         help='Print additional messages to the console\n'
                              'Default: %(default)s')
 
+    parser.add_argument('--time',
+                    action=StoreTrue,
+                    nargs=0,
+                    default=False,
+                    help='Generates a benchmark file with runtime info\n'
+                            'Default: %(default)s')
+
     parser.add_argument('--version',
                         action='version',
                         version='NodeCOLMAP {0}'.format(__version__),
                         help='Displays version number and exits. ')
 
     args = parser.parse_args(argv)
+
+    if not args.project_path:
+        parser.print_help()
+        exit(1)
 
     return args

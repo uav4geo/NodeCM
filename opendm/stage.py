@@ -1,5 +1,6 @@
+import os
 from opendm import log
-from opendm import progress
+from opendm.progress import progressbc
 from opendm import system
 
 class Stage:
@@ -33,11 +34,11 @@ class Stage:
         self.process(self.args, outputs)
 
         # The tree variable should always be populated at this point
-        if outputs.get('tree') is None:
-            raise Exception("Assert violation: tree variable is missing from outputs dictionary.")
+        if outputs.get('project_path') is None:
+            raise Exception("Assert violation: project_path variable is missing from outputs dictionary.")
 
         if self.args.time:
-            system.benchmark(start_time, outputs['tree'].benchmarking, self.name)
+            system.benchmark(start_time, os.path.join(outputs["project_path"], "benchmark.txt"), self.name)
 
         log.ODM_INFO('Finished %s stage' % self.name)
         self.update_progress_end()

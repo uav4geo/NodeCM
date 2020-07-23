@@ -20,7 +20,6 @@ ExternalProject_Add(colmap
   UPDATE_COMMAND    ""
   CMAKE_ARGS -DCGAL_ENABLED=OFF
              -DCUDA_ENABLED=ON
-  INSTALL_COMMAND    ""
 )
 
 ExternalProject_Add(dem2mesh

@@ -34,6 +34,15 @@ RUN apt-get update && apt-get install -y software-properties-common && \
     libgdal-dev \
     libtbb2 \
     libtbb-dev \
+    libeigen3-dev \
+    libflann-dev \
+    libboost-date-time-dev \
+    libboost-filesystem-dev \
+    libboost-iostreams-dev \
+    libboost-log-dev \
+    libboost-python-dev \
+    libboost-regex-dev \
+    libboost-thread-dev \
     wget \
     exiftool
 
