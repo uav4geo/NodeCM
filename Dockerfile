@@ -59,12 +59,12 @@ RUN wget -O /tmp/cmake.sh https://github.com/Kitware/CMake/releases/download/v3.
 ADD . /app
 WORKDIR /app
 
-RUN cd NodeODM && npm install --quiet
-
 RUN ldconfig && mkdir build && cd build && cmake .. && make -j$(nproc)
 RUN mkdir modules/build && cd modules/build && cmake .. && make -j$(nproc) && make install && ldconfig
 
 RUN pip install -r requirements.txt 
+
+RUN (rm -r NodeODM || true) && git submodule update --init && cd NodeODM && npm install --quiet
 
 # Cleanup APT
 RUN apt-get clean \
