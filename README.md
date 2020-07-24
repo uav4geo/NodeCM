@@ -11,6 +11,8 @@ It's compatible with the [NodeODM API](https://github.com/OpenDroneMap/NodeODM) 
 
 While a GPU can speed up certain steps of the pipeline, it is not required for use. CPU algorithms are implemented in case a GPU is not available.
 
+:warning: NodeCM is in early stages of development. Software faults are expected.
+
 ## Getting Started
 
 We recommend that you setup NodeCM using [Docker](https://www.docker.com/).
