@@ -15,7 +15,15 @@ While a GPU can speed up certain steps of the pipeline, it is not required for u
 
 We recommend that you setup NodeCM using [Docker](https://www.docker.com/).
 
-* From a shell, simply run:
+First, build your image (this will take a while):
+
+```bash
+$ git clone https://github.com/uav4geo/NodeCM
+$ cd NodeCM
+$ docker build -t uav4geo/nodecm .
+```
+
+* Then from a shell, simply run:
 
 ```
 $ docker run --rm -ti -p 3000:3000 uav4geo/nodecm
