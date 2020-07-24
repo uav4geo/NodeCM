@@ -78,6 +78,12 @@ If you want to use GPUs use:
 $ USE_GPU=ON ./nodecm /path/to/project --orthophoto-resolution 2
 ```
 
+To view all command line options run:
+
+```bash
+$ ./nodecm --help
+```
+
 ## Using an external hard drive
 
 If you want to store results on a separate drive, map the `/app/NodeODM/data` folder to the location of your drive:

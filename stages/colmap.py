@@ -151,12 +151,13 @@ class DenseStage(Stage):
         if not has_gpus():
             output_type = "PMVS"
             outputs["dense_workspace_dir"] = os.path.join(outputs["dense_dir"], "pmvs")
+            already_run_undistortion = os.path.exists(outputs["dense_workspace_dir"])
         else:
             output_type = "COLMAP"
-            raise Error("TODO!")
             outputs["dense_workspace_dir"] = outputs["dense_dir"]
-
-        if not os.path.exists(outputs["dense_workspace_dir"]) or self.rerun():
+            already_run_undistortion = os.path.exists(os.path.join(outputs["dense_dir"], "images")
+            
+        if not already_run_undistortion or self.rerun():
             log.ODM_INFO("Undistorting images using a %s workspace" % output_type.lower())
 
             # Undistort images
@@ -167,7 +168,7 @@ class DenseStage(Stage):
 
         if output_type == "COLMAP":
             outputs["point_cloud_ply_file"] = os.path.join(outputs["dense_workspace_dir"], "fused.ply")
-            outputs["undistorted_dir"] = "TODO"
+            outputs["undistorted_dir"] = os.path.join(outputs["dense_workspace_dir"], "images")
         else:
             outputs["dense_mve_dir"] = os.path.join(outputs["dense_workspace_dir"], "mve")
             outputs["point_cloud_ply_file"] = os.path.join(outputs["dense_mve_dir"], "mve_dense_point_cloud.ply")
