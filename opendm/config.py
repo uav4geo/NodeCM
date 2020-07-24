@@ -177,6 +177,13 @@ def config(argv=None):
                             'This only affects dense reconstructions performed with MVE. '
                             'Higher values discard more points. '
                             'Default: %(default)s'))
+    
+    parser.add_argument('--use-mve-dense',
+                        action=StoreTrue,
+                        nargs=0,
+                        default=False,
+                        help=('Always use MVE for densification, even if a GPU is available. By default MVE is used for CPU setups and COLMAP is used for GPU setups. Default: '
+                              ' %(default)s'))
 
     parser.add_argument('--texturing-data-term',
                         metavar='<string>',

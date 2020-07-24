@@ -19,6 +19,20 @@ if __name__ == '__main__':
     log.ODM_INFO('Initializing NodeCOLMAP app - %s' % system.now())
     log.ODM_INFO(args)
 
+    if args.rerun_all:
+        log.ODM_INFO("Rerun all -- Removing old data")
+        os.system("rm -rf " + 
+                    " ".join([
+                        quote(os.path.join(args.project_path, "dense")),
+                        quote(os.path.join(args.project_path, "database.db")),
+                        quote(os.path.join(args.project_path, "odm_dem")),
+                        quote(os.path.join(args.project_path, "odm_georeferencing")),
+                        quote(os.path.join(args.project_path, "odm_meshing")),
+                        quote(os.path.join(args.project_path, "odm_texturing")),
+                        quote(os.path.join(args.project_path, "entwine_pointcloud")),
+                        quote(os.path.join(args.project_path, "odm_orthophoto")),
+                    ]))
+
     progressbc.set_project_name(os.path.basename(args.project_path))
 
     # Initializes the application and defines the pipeline stages

@@ -148,7 +148,7 @@ class DenseStage(Stage):
         if not os.path.exists(outputs["dense_dir"]):
             system.mkdir_p(outputs["dense_dir"])
 
-        if not has_gpus():
+        if not has_gpus() or args.use_mve_dense:
             output_type = "PMVS"
             outputs["dense_workspace_dir"] = os.path.join(outputs["dense_dir"], "pmvs")
             already_run_undistortion = os.path.exists(outputs["dense_workspace_dir"])
@@ -184,11 +184,13 @@ class DenseStage(Stage):
                 cm.run("patch_match_stereo", workspace_path=outputs["dense_workspace_dir"],
                                              workspace_format="COLMAP",
                                              **kwargs)
+
+                kwargs = {}
                 
                 cm.run("stereo_fusion", workspace_path=outputs["dense_workspace_dir"],
                                         workspace_format="COLMAP",
                                         input_type="geometric",
-                                        output_type=outputs["point_cloud_ply_file"],
+                                        output_path=outputs["point_cloud_ply_file"],
                                         **kwargs)
             else:
                 # Use MVE
