@@ -67,5 +67,4 @@ RUN apt-get clean \
   && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* \
   && rm -fr /app/build /app/modules/build
 
-# Entry point
-ENTRYPOINT ["bash"]
+ENTRYPOINT ["/usr/bin/nodejs", "/app/NodeODM/index.js", "--odm_path", "/app"]
