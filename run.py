@@ -17,7 +17,7 @@ from stages.georeferencing import GeoreferencingStage
 if __name__ == '__main__':
     args = config.config()
 
-    log.ODM_INFO('Initializing NodeCOLMAP app - %s' % system.now())
+    log.ODM_INFO('Initializing NodeCM app - %s' % system.now())
     log.ODM_INFO(args)
 
     if args.rerun_all:
@@ -64,6 +64,6 @@ if __name__ == '__main__':
         # dataset.connect(split) \
     dataset.run()
 
-    log.ODM_INFO("*******************************************************")
-    log.ODM_INFO("NodeCOLMAP has ended! Woohoo! %s" % system.now())
-    log.ODM_INFO("*******************************************************")
+    log.ODM_INFO("***************************************************")
+    log.ODM_INFO("NodeCM has ended! Woohoo! %s" % system.now())
+    log.ODM_INFO("***************************************************")

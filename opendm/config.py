@@ -346,7 +346,7 @@ def config(argv=None):
 
     parser.add_argument('--version',
                         action='version',
-                        version='NodeCOLMAP {0}'.format(__version__),
+                        version='NodeCM {0}'.format(__version__),
                         help='Displays version number and exits. ')
 
     args = parser.parse_args(argv)
