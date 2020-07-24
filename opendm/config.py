@@ -9,7 +9,7 @@ with open(os.path.join(os.path.dirname(__file__), '..', 'VERSION')) as version_f
     __version__ = version_file.read().strip()
 
 # parse arguments
-processopts = ['dataset', 'features', 'matching', 'sparse', 'dense', 'mesh', 'texture', 'ortho']
+processopts = ['dataset', 'features', 'matching', 'sparse', 'georegister', 'dense', 'georeferencing', 'dem', 'mesh', 'texture', 'ortho']
 
 class RerunFrom(argparse.Action):
     def __call__(self, parser, namespace, values, option_string=None):
@@ -27,7 +27,7 @@ class StoreValue(argparse.Action):
         setattr(namespace, self.dest + '_is_set', True)
 
 parser = argparse.ArgumentParser(prog='run.py',
-                        usage='%(prog)s [options] <project_path>')
+                        usage='%(prog)s [options] <project>')
 args = None
 
 def config(argv=None):
@@ -36,11 +36,16 @@ def config(argv=None):
     if args is not None and argv is None:
         return args
     
-    parser.add_argument('project_path',
+    parser.add_argument('project',
                         metavar='<path>',
                         action=StoreValue,
                         nargs='?',
-                        help='Path to the project folder')
+                        help='Path to the project folder or name of the project in a workspace (when using --project-path)')
+
+    parser.add_argument('--project-path',
+                        metavar='<path>',
+                        action=StoreValue,
+                        help='Path to the workspace folder (for compatibility with ODM)')
 
     parser.add_argument('--resize-to',
                         metavar='<integer>',
@@ -50,6 +55,23 @@ def config(argv=None):
                         help='Resizes images by the largest side for feature extraction purposes only. '
                              'Set to -1 to disable. This does not affect the final orthophoto '
                              ' resolution quality and will not resize the original images. Default:  %(default)s')
+
+    parser.add_argument('--mesh-octree-depth',
+                    metavar='<positive integer>',
+                    action=StoreValue,
+                    default=10,
+                    type=int,
+                    help=('Oct-tree depth used in the mesh reconstruction, '
+                            'increase to get more vertices, recommended '
+                            'values are 8-12. Default: %(default)s'))
+
+    parser.add_argument('--mesh-size',
+                        metavar='<positive integer>',
+                        action=StoreValue,
+                        default=200000,
+                        type=int,
+                        help=('The maximum vertex count of the output mesh. '
+                              'Default: %(default)s'))
 
     parser.add_argument('--matcher-neighbors',
                         metavar='<integer>',
@@ -137,6 +159,24 @@ def config(argv=None):
                         choices=['simple_radial', 'radial', 'simple_pinhole', 'pinhole', 'opencv', 'full_opencv', 'simple_radial_fisheye', 'radial_fisheye', 'opencv_fisheye', 'fov', 'thin_prism_fisheye'],
                         help=('Camera model: [simple_radial, radial, simple_pinhole, pinhole, opencv, full_opencv, simple_radial_fisheye, radial_fisheye, opencv_fisheye, fov, thin_prism_fisheye]. default: '
                               '%(default)s'))
+
+    parser.add_argument('--mesher',
+                        metavar='<string>',
+                        action=StoreValue,
+                        default='poisson',
+                        choices=['poisson'], #TODO: add delaunay
+                        help=('Mesher to use: [poisson]. default: '
+                              '%(default)s'))
+
+    parser.add_argument('--mve-confidence',
+                    metavar='<float: 0 <= x <= 1>',
+                    action=StoreValue,
+                    type=float,
+                    default=0.60,
+                    help=('Discard points that have less than a certain confidence threshold. '
+                            'This only affects dense reconstructions performed with MVE. '
+                            'Higher values discard more points. '
+                            'Default: %(default)s'))
 
     parser.add_argument('--texturing-data-term',
                         metavar='<string>',
@@ -245,13 +285,13 @@ def config(argv=None):
     #                          'and merged together. Remaining gaps are then merged using nearest neighbor interpolation. '
     #                          '\nDefault=%(default)s')
 
-    # parser.add_argument('--dem-resolution',
-    #                     metavar='<float>',
-    #                     action=StoreValue,
-    #                     type=float,
-    #                     default=5,
-    #                     help='DSM/DTM resolution in cm / pixel. Note that this value is capped by a ground sampling distance (GSD) estimate. To remove the cap, check --ignore-gsd also.'
-    #                          '\nDefault: %(default)s')
+    parser.add_argument('--dem-resolution',
+                        metavar='<float>',
+                        action=StoreValue,
+                        type=float,
+                        default=5,
+                        help='DSM resolution in cm / pixel. '
+                             '\nDefault: %(default)s')
 
     # parser.add_argument('--dem-decimation',
     #                     metavar='<positive integer>',
@@ -269,6 +309,19 @@ def config(argv=None):
                         type=float,
                         help=('Orthophoto resolution in cm / pixel. Note that this value is capped by a ground sampling distance (GSD) estimate. To remove the cap, check --ignore-gsd also.\n'
                               'Default: %(default)s'))
+    
+    parser.add_argument('--orthophoto-png',
+                    action=StoreTrue,
+                    nargs=0,
+                    default=False,
+                    help='Set this parameter if you want to generate a PNG rendering of the orthophoto.\n'
+                            'Default: %(default)s')
+
+    parser.add_argument('--build-overviews',
+                    action=StoreTrue,
+                    nargs=0,
+                    default=False,
+                    help='Build orthophoto overviews using gdaladdo.')
 
     parser.add_argument('--verbose', '-v',
                         action=StoreTrue,
@@ -291,8 +344,13 @@ def config(argv=None):
 
     args = parser.parse_args(argv)
 
-    if not args.project_path:
+    if not args.project:
         parser.print_help()
         exit(1)
 
+    if args.project_path:
+        args.project_path = os.path.join(args.project_path, args.project)
+    else:
+        args.project_path = args.project
+        
     return args

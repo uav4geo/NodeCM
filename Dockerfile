@@ -49,11 +49,15 @@ RUN apt-get update && apt-get install -y software-properties-common && \
 # TODO: add files
 # TODO: change folder
 
+RUN mkdir build && cd build && cmake .. && make -j$(nproc)
+RUN mkdir modules/build && cd modules/build && cmake .. && make -j$(nproc) && make install
+
 RUN pip install -r requirements.txt 
 
 # Cleanup APT
 RUN apt-get clean \
-  && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* 
+  && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* \
+  && rm -fr /app/build /app/modules/build
 
 # Entry point
 ENTRYPOINT ["bash"]

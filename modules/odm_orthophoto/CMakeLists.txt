@@ -37,3 +37,4 @@ set_target_properties(${PROJECT_NAME} PROPERTIES
     CXX_STANDARD 11
 )
 target_link_libraries(odm_orthophoto ${PCL_COMMON_LIBRARIES} ${PCL_IO_LIBRARIES} ${PCL_SURFACE_LIBRARIES} ${OpenCV_LIBS} ${GDAL_LIBRARY})
+install(TARGETS odm_orthophoto)

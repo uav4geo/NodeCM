@@ -25,11 +25,10 @@ ExternalProject_Add(colmap
 ExternalProject_Add(dem2mesh
     GIT_REPOSITORY    https://github.com/OpenDroneMap/dem2mesh.git
     GIT_TAG           master
-    SOURCE_DIR        ${SB_SOURCE_DIR}/dem2mesh
     UPDATE_COMMAND    ""
     BUILD_IN_SOURCE 1
     BUILD_COMMAND     make -j8
-    INSTALL_COMMAND   ""
+    INSTALL_COMMAND   cp <SOURCE_DIR>/dem2mesh /usr/local/bin/
 )
 
 ExternalProject_Add(mvs-texturing
@@ -177,6 +176,10 @@ ExternalProject_Add(mve
     CONFIGURE_COMMAND ""
     BUILD_IN_SOURCE 1
     BUILD_COMMAND   make
-    INSTALL_COMMAND cp <SOURCE_DIR>/apps/makescene/makescene /usr/local/bin && cp <SOURCE_DIR>/apps/dmrecon/dmrecon /usr/local/bin/dmrecon 
+    INSTALL_COMMAND cp <SOURCE_DIR>/apps/makescene/makescene /usr/local/bin && 
+            cp <SOURCE_DIR>/apps/dmrecon/dmrecon /usr/local/bin/ && 
+            cp <SOURCE_DIR>/apps/scene2pset/scene2pset /usr/local/bin/ &&
+            cp <SOURCE_DIR>/apps/meshclean/meshclean /usr/local/bin/ &&
+            
 )
 

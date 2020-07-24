@@ -1,14 +1,44 @@
 import os
 import glob
+import json
 
 from opendm import io
 from opendm import log
 from opendm import system
 from opendm import progress
 from opendm.stage import Stage
+from opendm.photo import ODM_Photo
+from opendm.location import extract_utm_coords
 
 from app.colmap import ColmapContext
 from app import fs
+
+def save_images_database(photos, database_file):
+    with open(database_file, 'w') as f:
+        f.write(json.dumps(map(lambda p: p.__dict__, photos)))
+    
+    log.ODM_INFO("Wrote images database: %s" % database_file)
+
+def load_images_database(database_file):
+    # Empty is used to create ODM_Photo class
+    # instances without calling __init__
+    class Empty:
+        pass
+
+    result = []
+
+    log.ODM_INFO("Loading images database: %s" % database_file)
+
+    with open(database_file, 'r') as f:
+        photos_json = json.load(f)
+        for photo_json in photos_json:
+            p = Empty()
+            for k in photo_json:
+                setattr(p, k, photo_json[k])
+            p.__class__ = ODM_Photo
+            result.append(p)
+
+    return result
 
 class DatasetStage(Stage):
     def process(self, args, outputs):
@@ -26,29 +56,53 @@ class DatasetStage(Stage):
             exit(1)
 
         # create output directories (match ODM conventions for compatibility)
-        odm_dirs = ['odm_orthophoto', 'odm_dem', 'odm_georeferencing']
+        odm_dirs = ['odm_orthophoto', 'odm_meshing', 'odm_texturing', 'odm_dem', 'odm_georeferencing']
 
         for odm_dir in odm_dirs:
             system.mkdir_p(os.path.join(args.project_path, odm_dir))
 
-        if not os.path.exists(outputs["image_list_file"]) or self.rerun():
-            image_files = []
-
-            # Create image list
+        images_database_file = io.join_paths(args.project_path, 'images.json')
+        if not io.file_exists(images_database_file) or self.rerun():
+            files = []
             for ext in ["JPG", "JPEG", "TIF", "TIFF", "jpg", "jpeg", "tif", "tiff"]:
                 image_wildcard = '*.{}'.format(ext)
-                image_files += map(os.path.basename, glob.glob(os.path.join(outputs["images_dir"], image_wildcard)))
+                files += glob.glob(os.path.join(outputs["images_dir"], image_wildcard))
 
-            with open(outputs["image_list_file"], "w") as f:
-                for image in image_files:
-                    f.write(image + "\n")
+            if files:
+                photos = []
+                with open(outputs["image_list_file"], 'w') as image_list:
+                    log.ODM_INFO("Loading %s images" % len(files))
+                    for f in files:
+                        photos += [ODM_Photo(f)]
+                        image_list.write(photos[-1].filename + '\n')
+
+                # Save image database for faster restart
+                save_images_database(photos, images_database_file)
+            else:
+                log.ODM_ERROR('Not enough supported images in %s' % images_dir)
+                exit(1)
         else:
-            log.ODM_INFO("Reading existing image list from %s" % outputs["image_list_file"])
-            with open(outputs["image_list_file"], "r") as f:
-                image_files = list(filter(len, map(str.strip, f.read().split("\n"))))
-        
-        if len(image_files) == 0:
+            # We have an images database, just load it
+            photos = load_images_database(images_database_file)
+
+        log.ODM_INFO('Found %s usable images' % len(photos))
+
+        if len(photos) == 0:
             log.ODM_ERROR("No images found (JPG or TIFF). Check that you placed some images in the images/ directory.")
             exit(1)
 
-        outputs["image_files"] = image_files
+        utm_coords_file = os.path.join(args.project_path, "utm_coords.txt")
+        if not os.path.exists(utm_coords_file) or self.rerun():
+            extract_utm_coords(photos, outputs["images_dir"], utm_coords_file)
+        else:
+            log.ODM_WARNING("Found existing %s" % utm_coords_file)
+
+        outputs["photos"] = photos
+        outputs["utm_coords_file"] = utm_coords_file
+
+
+
+
+
+
+

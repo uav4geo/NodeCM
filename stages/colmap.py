@@ -12,12 +12,14 @@ from opendm.gpu import has_gpus
 
 from app.get_image_size import get_image_size
 from app import fs
+from app.colmap import extract_georegistration
 
 class FeaturesStage(Stage):
     def process(self, args, outputs):
         cm = outputs["cm"]
         outputs["db_path"] = os.path.join(outputs["project_path"], "database.db")
 
+        # TODO: read from sqlite instead
         features_done = os.path.join(outputs["project_path"], "features_done.txt")
 
         if not os.path.exists(features_done) or self.rerun():
@@ -34,12 +36,15 @@ class FeaturesStage(Stage):
                                         image_list_path=outputs["image_list_file"],
                                         **kwargs)
             fs.touch(features_done)
+        else:
+            log.ODM_WARNING("Already computed features")
 
 
 class MatchingStage(Stage):
     def process(self, args, outputs):
         cm = outputs["cm"]
-
+        
+        # TODO: read from sqlite instead
         matching_done = os.path.join(outputs["project_path"], "matching_done.txt")
         if not os.path.exists(matching_done) or self.rerun():
             kwargs = {}
@@ -59,7 +64,8 @@ class MatchingStage(Stage):
             cm.run(matcher_type, database_path=outputs["db_path"],
                                 **kwargs)
             fs.touch(matching_done)
-
+        else:
+            log.ODM_WARNING("Already computed matches")
 
 class SparseStage(Stage):
     def process(self, args, outputs):
@@ -81,6 +87,8 @@ class SparseStage(Stage):
                              output_path=outputs["sparse_dir"],
                              log_level=1,
                              **kwargs)
+        else:
+            log.ODM_WARNING("Found existing sparse results %s" % outputs["sparse_dir"])
 
         outputs["sparse_reconstruction_dirs"] = list(map(lambda p: os.path.join(outputs["sparse_dir"], p), os.listdir(outputs["sparse_dir"])))
 
@@ -92,9 +100,20 @@ class SparseStage(Stage):
                             "The program will now exit.")
             exit(1)
 
-class DenseStage(Stage):
+class GeoregisterStage(Stage):
     def process(self, args, outputs):
         cm = outputs["cm"]
+
+
+        georegistration_file = os.path.join(outputs["project_path"], "georegistration.txt")
+        if not os.path.exists(georegistration_file) or self.rerun():
+            if len(outputs["photos"]) < 3:
+                log.ODM_ERROR("You need at least 3 photos to georegister this dataset")
+                exit(1)
+
+            extract_georegistration(outputs["photos"], georegistration_file)
+        else:
+            log.ODM_WARNING("Found existing georegistration file %s" % georegistration_file)
 
         # TODO: handle multiple reconstructions
         if len(outputs["sparse_reconstruction_dirs"]) > 1:
@@ -102,6 +121,27 @@ class DenseStage(Stage):
                             "Part of your dataset might not be reconstructed")
         
         reconstruction_dir = outputs["sparse_reconstruction_dirs"][0]
+        georeconstruction_dir = os.path.join(reconstruction_dir, "geo")
+
+        if not os.path.exists(georeconstruction_dir) or self.rerun():
+            if os.path.exists(georeconstruction_dir):
+                log.ODM_WARNING("Deleting %s" % georeconstruction_dir)
+                shutil.rmtree(georeconstruction_dir)
+            
+            system.mkdir_p(georeconstruction_dir)
+
+            cm.run("model_aligner", input_path=reconstruction_dir,
+                                    output_path=georeconstruction_dir,
+                                    robust_alignment_max_error=15, # TODO: use GPS DOP
+                                    ref_images_path=georegistration_file)
+
+        outputs["georeconstruction_dir"] = georeconstruction_dir
+
+class DenseStage(Stage):
+    def process(self, args, outputs):
+        cm = outputs["cm"]
+
+        georeconstruction_dir = outputs["georeconstruction_dir"]
         
         # Create dense dir
         outputs["dense_dir"] = os.path.join(outputs["project_path"], "dense")
@@ -120,16 +160,18 @@ class DenseStage(Stage):
             log.ODM_INFO("Undistorting images using a %s workspace" % output_type.lower())
 
             # Undistort images
-            # cm.run("image_undistorter", image_path=outputs["images_dir"],
-            #                             input_path=reconstruction_dir,
-            #                             output_path=outputs["dense_dir"],
-            #                             output_type=output_type)
+            cm.run("image_undistorter", image_path=outputs["images_dir"],
+                                        input_path=georeconstruction_dir,
+                                        output_path=outputs["dense_dir"],
+                                        output_type=output_type)
 
         if output_type == "COLMAP":
             outputs["point_cloud_ply_file"] = "TODO"
+            outputs["undistorted_dir"] = "TODO"
         else:
             outputs["dense_mve_dir"] = os.path.join(outputs["dense_workspace_dir"], "mve")
-            outputs["point_cloud_ply_file"] = os.path.join(outputs["dense_mve_dir"], "TODO!")
+            outputs["point_cloud_ply_file"] = os.path.join(outputs["dense_mve_dir"], "mve_dense_point_cloud.ply")
+            outputs["undistorted_dir"] = os.path.join(outputs["dense_workspace_dir"], "bundler")
 
         if not os.path.exists(outputs["point_cloud_ply_file"]) or self.rerun():
             if output_type == "COLMAP":
@@ -137,9 +179,18 @@ class DenseStage(Stage):
                     'PatchMatchStereo.geom_consistency': 'true'
                 }
 
+                # TODO: check
+
                 cm.run("patch_match_stereo", workspace_path=outputs["dense_workspace_dir"],
                                             workspace_format="COLMAP",
                                             **kwargs)
+                
+                # TODO: stereo fusion
+                # cm.run("mapper", database_path=outputs["db_path"],
+                #                  image_path=outputs["images_dir"],
+                #                  output_path=outputs["sparse_dir"],
+                #                  log_level=1,
+                #                  **kwargs)
             else:
                 # Use MVE
 
@@ -238,13 +289,22 @@ class DenseStage(Stage):
                         else:
                             raise e
 
-            # TODO: stereo fusion
+                scene2pset_config = [
+                    "-F%s" % mve_output_scale
+                ]
 
+                system.run('scene2pset %s "%s" "%s"' % (' '.join(scene2pset_config), outputs["dense_mve_dir"], outputs["point_cloud_ply_file"]))
+        
+                # run cleanmesh (filter points by MVE confidence threshold)
+                if args.mve_confidence > 0:
+                    mve_filtered_model = io.related_file_path(outputs["point_cloud_ply_file"], postfix=".filtered")
+                    system.run('meshclean -t%s --no-clean --component-size=0 "%s" "%s"' % (min(1.0, args.mve_confidence), outputs["point_cloud_ply_file"], mve_filtered_model))
+
+                    if io.file_exists(mve_filtered_model):
+                        os.remove(outputs["point_cloud_ply_file"])
+                        os.rename(mve_filtered_model, outputs["point_cloud_ply_file"])
+                    else:
+                        log.ODM_WARNING("Couldn't filter MVE model (%s does not exist)." % mve_filtered_model)
+        else:
+            log.ODM_WARNING('Found existing dense model in: %s' % outputs["point_cloud_ply_file"])
             
-            # cm.run("mapper", database_path=outputs["db_path"],
-            #                  image_path=outputs["images_dir"],
-            #                  output_path=outputs["sparse_dir"],
-            #                  log_level=1,
-            #                  **kwargs)
-
-            # fs.touch(sparse_done)
