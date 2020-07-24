@@ -57,7 +57,7 @@ WORKDIR /app
 
 RUN cd NodeODM && npm install --quiet
 
-RUN mkdir build && cd build && cmake .. && make -j$(nproc)
+RUN ldconfig && mkdir build && cd build && cmake .. && make -j$(nproc)
 RUN mkdir modules/build && cd modules/build && cmake .. && make -j$(nproc) && make install && ldconfig
 
 RUN pip install -r requirements.txt 

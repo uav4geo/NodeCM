@@ -27,7 +27,7 @@ ExternalProject_Add(dem2mesh
     GIT_TAG           master
     UPDATE_COMMAND    ""
     BUILD_IN_SOURCE 1
-    BUILD_COMMAND     make -j8
+    BUILD_COMMAND     make -j$(nproc)
     INSTALL_COMMAND   cp <SOURCE_DIR>/dem2mesh /usr/local/bin/
 )
 
