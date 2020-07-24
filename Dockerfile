@@ -52,7 +52,7 @@ RUN apt-get update && apt-get install -y software-properties-common && \
     p7zip-full
 
 # Install latest cmake
-RUN wget -O /tmp/cmake.sh && sh https://github.com/Kitware/CMake/releases/download/v3.18.0/cmake-3.18.0-Linux-x86_64.sh --prefix=/usr --skip-license
+RUN wget -O /tmp/cmake.sh https://github.com/Kitware/CMake/releases/download/v3.18.0/cmake-3.18.0-Linux-x86_64.sh && sh /tmp/cmake.sh --prefix=/usr --skip-license
 
 ADD . /app
 WORKDIR /app
