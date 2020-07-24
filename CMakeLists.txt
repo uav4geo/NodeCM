@@ -96,6 +96,17 @@ ExternalProject_Add(pdal
     -DCMAKE_BUILD_TYPE=Release
 )
 
+ExternalProject_Add(entwine
+  DEPENDS           pdal
+  GIT_REPOSITORY    https://github.com/connormanning/entwine/
+  GIT_TAG           2.1.0
+  UPDATE_COMMAND    ""
+  CMAKE_ARGS
+    -DCMAKE_CXX_FLAGS=-isystem\ ${SB_SOURCE_DIR}/pdal
+    -DWITH_TESTS=OFF
+	-DCMAKE_BUILD_TYPE=Release
+)
+
 ExternalProject_Add(pcl
     URL               https://github.com/OpenDroneMap/pcl/archive/master.zip
     UPDATE_COMMAND    ""

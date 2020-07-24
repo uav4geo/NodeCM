@@ -1,5 +1,10 @@
 FROM nvidia/cuda:10.2-devel-ubuntu16.04
 
+# Install Node.js
+RUN apt-get -qq update && apt-get -qq install -y --no-install-recommends wget
+RUN wget --no-check-certificate https://deb.nodesource.com/setup_10.x -O /tmp/node.sh && bash /tmp/node.sh
+RUN apt-get -qq update && apt-get -qq install -y nodejs
+
 #Install dependencies and required requisites
 RUN apt-get update && apt-get install -y software-properties-common && \
     add-apt-repository -y ppa:ubuntugis/ubuntugis-unstable && \
@@ -44,10 +49,13 @@ RUN apt-get update && apt-get install -y software-properties-common && \
     libboost-regex-dev \
     libboost-thread-dev \
     wget \
-    exiftool
+    exiftool \
+    p7zip-full
 
-# TODO: add files
-# TODO: change folder
+ADD . /app
+WORKDIR /app
+
+RUN cd NodeODM && npm install --quiet
 
 RUN mkdir build && cd build && cmake .. && make -j$(nproc)
 RUN mkdir modules/build && cd modules/build && cmake .. && make -j$(nproc) && make install

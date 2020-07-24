@@ -1,0 +1,3 @@
+[submodule "NodeODM"]
+	path = NodeODM
+	url = https://github.com/OpenDroneMap/NodeODM
