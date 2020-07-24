@@ -34,6 +34,8 @@ RUN apt-get update && apt-get install -y software-properties-common && \
     python-dev \
     python-gdal \
     python-pip \
+    python-wheel \
+    python-setuptools \
     gdal-bin \
     libgdal-dev \
     libtbb2 \

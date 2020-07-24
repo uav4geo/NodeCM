@@ -154,7 +154,7 @@ class DenseStage(Stage):
         else:
             output_type = "COLMAP"
             raise Error("TODO!")
-            outputs["dense_workspace_dir"] = os.path.join(outputs["dense_dir"], "colmap")  #?
+            outputs["dense_workspace_dir"] = outputs["dense_dir"]
 
         if not os.path.exists(outputs["dense_workspace_dir"]) or self.rerun():
             log.ODM_INFO("Undistorting images using a %s workspace" % output_type.lower())
@@ -166,7 +166,7 @@ class DenseStage(Stage):
                                         output_type=output_type)
 
         if output_type == "COLMAP":
-            outputs["point_cloud_ply_file"] = "TODO"
+            outputs["point_cloud_ply_file"] = os.path.join(outputs["dense_workspace_dir"], "fused.ply")
             outputs["undistorted_dir"] = "TODO"
         else:
             outputs["dense_mve_dir"] = os.path.join(outputs["dense_workspace_dir"], "mve")
@@ -175,26 +175,24 @@ class DenseStage(Stage):
 
         if not os.path.exists(outputs["point_cloud_ply_file"]) or self.rerun():
             if output_type == "COLMAP":
+                # Use COLMAP, easy
                 kwargs = {
                     'PatchMatchStereo.geom_consistency': 'true'
                 }
 
-                # TODO: check
-
                 cm.run("patch_match_stereo", workspace_path=outputs["dense_workspace_dir"],
-                                            workspace_format="COLMAP",
-                                            **kwargs)
+                                             workspace_format="COLMAP",
+                                             **kwargs)
                 
-                # TODO: stereo fusion
-                # cm.run("mapper", database_path=outputs["db_path"],
-                #                  image_path=outputs["images_dir"],
-                #                  output_path=outputs["sparse_dir"],
-                #                  log_level=1,
-                #                  **kwargs)
+                cm.run("stereo_fusion", workspace_path=outputs["dense_workspace_dir"],
+                                        workspace_format="COLMAP",
+                                        input_type="geometric",
+                                        output_type=outputs["point_cloud_ply_file"],
+                                        **kwargs)
             else:
                 # Use MVE
 
-                # 1. Create directory structure so makescene is happy...
+                # Create directory structure so makescene is happy...
                 if os.path.exists(outputs["dense_mve_dir"]) and self.rerun():
                     log.ODM_WARNING("Removing %s" % outputs["dense_mve_dir"])
                     shutil.rmtree(outputs["dense_mve_dir"])
