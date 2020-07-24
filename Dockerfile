@@ -10,7 +10,6 @@ RUN apt-get update && apt-get install -y software-properties-common && \
     add-apt-repository -y ppa:ubuntugis/ubuntugis-unstable && \
     apt-get update && apt-get install -y --no-install-recommends \
     git \
-    cmake \
     build-essential \
     libboost-program-options-dev \
     libboost-filesystem-dev \
@@ -51,6 +50,9 @@ RUN apt-get update && apt-get install -y software-properties-common && \
     wget \
     exiftool \
     p7zip-full
+
+# Install latest cmake
+RUN wget -O /tmp/cmake.sh && sh https://github.com/Kitware/CMake/releases/download/v3.18.0/cmake-3.18.0-Linux-x86_64.sh --prefix=/usr --skip-license
 
 ADD . /app
 WORKDIR /app
