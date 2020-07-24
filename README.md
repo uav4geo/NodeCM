@@ -1,6 +1,6 @@
 # NodeCM
 
-An end-to-end GPU-enabled photogrammetry pipeline to generate point clouds, orthophotos and elevation models from aerial images using [COLMAP](https://github.com/colmap/colmap/).
+A GPU-enabled photogrammetry pipeline to generate georeferenced point clouds, orthophotos and elevation models from aerial images using [COLMAP](https://github.com/colmap/colmap/).
 
 It's compatible with the [NodeODM API](https://github.com/OpenDroneMap/NodeODM) so it works out of the box with many of the tools of the OpenDroneMap ecosystem such as [WebODM](https://github.com/OpenDroneMap/WebODM), [ClusterODM](https://github.com/OpenDroneMap/ClusterODM) and [CloudODM](https://github.com/OpenDroneMap/CloudODM).
 
@@ -13,7 +13,7 @@ We recommend that you setup NodeCM using [Docker](https://www.docker.com/).
 * From a shell, simply run:
 
 ```
-docker run -p 3000:3000 uav4geo/nodecm
+$ docker run --rm -p 3000:3000 uav4geo/nodecm
 ```
 
 * Open a Web Browser to `http://localhost:3000` (or the IP of your docker machine)
@@ -21,23 +21,75 @@ docker run -p 3000:3000 uav4geo/nodecm
 * Press "Start Task"
 * Go for a walk :)
 
-## Using an External Hard Drive
+:warning: If you want to use the GPU features of NodeCM, you need to have one or more NVIDIA GPUs compatible with CUDA and make sure that docker can communite with it. You can run `nvidia-smi` to test that docker is configured properly:
+
+```bash
+$ docker run --gpus all nvidia/cuda:10.0-base nvidia-smi
+```
+
+If you see an output that looks like this:
+
+```
+Fri Jul 24 18:51:55 2020       
++-----------------------------------------------------------------------------+
+| NVIDIA-SMI 440.82       Driver Version: 440.82       CUDA Version: 10.2     |
+|-------------------------------+----------------------+----------------------+
+| GPU  Name        Persistence-M| Bus-Id        Disp.A | Volatile Uncorr. ECC |
+| Fan  Temp  Perf  Pwr:Usage/Cap|         Memory-Usage | GPU-Util  Compute M. |
+```
+
+You're in good shape!
+
+Then you **must pass** `--gpus all` to the docker command:
+
+```bash
+$ docker run --rm --gpus all -p 3000:3000 uav4geo/nodecm
+```
+
+See https://github.com/NVIDIA/nvidia-docker for information on docker/NVIDIA setup.
+
+## Run from the command line
+
+You don't have to run NodeCM from a browser. You can also run it directly from the command line (useful for scripting workflows):
+
+First, place some images in your project's `images` folder:
+
+```bash
+$ ls /path/to/project
+images
+$ ls /path/to/project/images
+DJI_0018.JPG    DJI_0019.JPG    ...
+```
+
+Then run:
+
+```bash
+$ ./nodecm /path/to/project --orthophoto-resolution 2
+```
+
+If you want to use GPUs use:
+
+```bash
+$ USE_GPU=ON ./nodecm /path/to/project --orthophoto-resolution 2
+```
+
+## Using an external hard drive
 
 If you want to store results on a separate drive, map the `/app/NodeODM/data` folder to the location of your drive:
 
 ```bash
-docker run -p 3000:3000 -v /mnt/external_hd:/app/NodeODM/data uav4geo/nodecm
+$ docker run -p 3000:3000 -v /mnt/external_hd:/app/NodeODM/data uav4geo/nodecm
 ```
 
 This can be also used to access the computation results directly from the file system.
 
-### Test Images
+### Test images
 
 You can find some test drone images [here](https://github.com/OpenDroneMap/odm_data).
 
 ## Contributing
 
-We welcome contributions! Send pull requests and let's build something cool together.
+We welcome contributions! Send pull requests :love:
 
 ## Roadmap
 
@@ -52,12 +104,15 @@ NodeCM is in beta. It hasn't been battle-tested and issues are expected. We are 
 ## License
 
 This codebase: Affero GPL
-COLMAP: BSD.
+
+COLMAP: BSD
+
 OpenDroneMap/NodeODM modules: GPL
+
 
 ## GPU License Restrictions
 
-If you use the GPU features of NodeCM, you **cannot** use NodeCM for purposes other than educational, research and non-profit purposes without obtaining permission from the `University of North Carolina at Chapel Hill`. COLMAP uses the SIFT GPU library, which is released under the following [license](https://github.com/colmap/colmap/blob/dev/lib/SiftGPU/LICENSE):
+Because of restrictive licenses in some of COLMAP's dependencies, if you use the GPU features of NodeCM, you **cannot** use NodeCM for purposes other than educational, research and non-profit without obtaining permission from the `University of North Carolina at Chapel Hill`. COLMAP uses the SIFT GPU library, which is released under the following [license](https://github.com/colmap/colmap/blob/dev/lib/SiftGPU/LICENSE):
 
 ```
 ////////////////////////////////////////////////////////////////////////////
@@ -79,4 +134,4 @@ If you use the GPU features of NodeCM, you **cannot** use NodeCM for purposes ot
 ////////////////////////////////////////////////////////////////////////////
 ```
 
-We understand this is unfortunate. Contribute a PR to replace SIFT GPU?
+We understand this is unfortunate. Contribute a PR to replace SIFT GPU in COLMAP.

@@ -102,9 +102,10 @@ ExternalProject_Add(entwine
   GIT_TAG           2.1.0
   UPDATE_COMMAND    ""
   CMAKE_ARGS
-    -DCMAKE_CXX_FLAGS=-isystem\ ${SB_SOURCE_DIR}/pdal
+    -DCMAKE_CXX_FLAGS=-isystem
     -DWITH_TESTS=OFF
 	-DCMAKE_BUILD_TYPE=Release
+  INSTALL_COMMAND cd <BINARY_DIR> && make install
 )
 
 ExternalProject_Add(pcl
@@ -187,10 +188,9 @@ ExternalProject_Add(mve
     CONFIGURE_COMMAND ""
     BUILD_IN_SOURCE 1
     BUILD_COMMAND   make
-    INSTALL_COMMAND cp <SOURCE_DIR>/apps/makescene/makescene /usr/local/bin && 
-            cp <SOURCE_DIR>/apps/dmrecon/dmrecon /usr/local/bin/ && 
+    INSTALL_COMMAND cp <SOURCE_DIR>/apps/makescene/makescene /usr/local/bin &&
+            cp <SOURCE_DIR>/apps/dmrecon/dmrecon /usr/local/bin/ &&
             cp <SOURCE_DIR>/apps/scene2pset/scene2pset /usr/local/bin/ &&
-            cp <SOURCE_DIR>/apps/meshclean/meshclean /usr/local/bin/ &&
-            
+            cp <SOURCE_DIR>/apps/meshclean/meshclean /usr/local/bin/
 )
 
