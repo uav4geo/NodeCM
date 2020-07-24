@@ -1,5 +1,6 @@
 #!/usr/bin/python
 import os
+from pipes import quote
 from opendm import log
 from opendm import config
 from opendm import system
