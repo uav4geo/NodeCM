@@ -18,7 +18,7 @@ We recommend that you setup NodeCM using [Docker](https://www.docker.com/).
 * From a shell, simply run:
 
 ```
-$ docker run --rm -p 3000:3000 uav4geo/nodecm
+$ docker run --rm -ti -p 3000:3000 uav4geo/nodecm
 ```
 
 * Open a Web Browser to `http://localhost:3000` (or the IP of your docker machine)
@@ -29,7 +29,7 @@ $ docker run --rm -p 3000:3000 uav4geo/nodecm
 :warning: If you want to use the GPU features of NodeCM, you need to have one or more NVIDIA GPUs compatible with CUDA and make sure that docker can communite with it. You can run `nvidia-smi` to test that docker is configured properly:
 
 ```bash
-$ docker run --gpus all nvidia/cuda:10.0-base nvidia-smi
+$ docker run --rm --gpus all nvidia/cuda:10.0-base nvidia-smi
 ```
 
 If you see an output that looks like this:
@@ -48,7 +48,7 @@ You're in good shape!
 Then you **must pass** `--gpus all` to the docker command:
 
 ```bash
-$ docker run --rm --gpus all -p 3000:3000 uav4geo/nodecm
+$ docker run --rm --gpus all -ti -p 3000:3000 uav4geo/nodecm
 ```
 
 See https://github.com/NVIDIA/nvidia-docker for information on docker/NVIDIA setup.
@@ -94,7 +94,7 @@ You can find some test drone images [here](https://github.com/OpenDroneMap/odm_d
 
 ## Contributing
 
-We welcome contributions! Send pull requests :love:
+We welcome contributions! Send pull requests :heart: bug reports and whatever is useful to you.
 
 ## Roadmap
 
