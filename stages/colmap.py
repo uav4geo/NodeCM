@@ -155,7 +155,7 @@ class DenseStage(Stage):
         else:
             output_type = "COLMAP"
             outputs["dense_workspace_dir"] = outputs["dense_dir"]
-            already_run_undistortion = os.path.exists(os.path.join(outputs["dense_dir"], "images")
+            already_run_undistortion = os.path.exists(os.path.join(outputs["dense_dir"], "images"))
             
         if not already_run_undistortion or self.rerun():
             log.ODM_INFO("Undistorting images using a %s workspace" % output_type.lower())
