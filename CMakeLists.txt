@@ -33,7 +33,7 @@ ExternalProject_Add(dem2mesh
 
 ExternalProject_Add(mvs-texturing
   GIT_REPOSITORY    https://github.com/OpenDroneMap/mvs-texturing
-  GIT_TAG           099
+  GIT_TAG           101
   UPDATE_COMMAND    ""
   CMAKE_ARGS
     -DRESEARCH=OFF
