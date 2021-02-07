@@ -61,7 +61,7 @@ Then you **must pass** `--gpus all` to the docker command:
 $ docker run --rm --gpus all -ti -p 3000:3000 uav4geo/nodecm
 ```
 
-See https://github.com/NVIDIA/nvidia-docker for information on docker/NVIDIA setup.
+See https://github.com/NVIDIA/nvidia-docker and https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide.html#docker for information on docker/NVIDIA setup.
 
 ## Run from the command line
 
